@@ -1,0 +1,31 @@
+<launch>
+
+  <arg name="gpu" default="0" />
+  <arg name="gui" default="true" />
+  <include file="$(find dense_fusion_ros)/sample/include/play_rosbag_ycb_video.xml" />
+
+  <node name="dense_fusion_node"
+        pkg="dense_fusion_ros" type="dense_fusion_node.py" >
+    <remap from="~input/image" to="/camera/rgb/image_rect_color" />
+    <remap from="~input/label" to="/label" />
+    <remap from="~input/depth" to="/camera/depth_registered/hw_registered/image_rect_raw" />
+    <remap from="~input/rects" to="/rects" />
+    <remap from="~input/class" to="/class_results" />
+    <remap from="~input/info" to="/camera/rgb/camera_info" />
+    <rosparam subst_value="true" >
+      mesh_model_path: $(find dense_fusion_ros)/sample/data/ycb_video_dataset_mesh_models
+      target_label: 025_mug
+      <!-- 002_master_chef_can -->
+      <!-- 025_mug -->
+      <!-- 007_tuna_fish_can -->
+    </rosparam>
+  </node>
+
+  <group if="$(arg gui)" >
+    <node name="$(anon rviz)"
+          pkg="rviz" type="rviz"
+          args="-d $(find dense_fusion_ros)/sample/rviz/dense_fusion.rviz" >
+    </node>
+  </group>
+
+</launch>

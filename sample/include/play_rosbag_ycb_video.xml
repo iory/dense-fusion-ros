@@ -1,0 +1,54 @@
+<launch>
+
+    <param name="/use_sim_time" value="true" />
+
+    <node name="rosbag_play"
+          pkg="rosbag" type="play"
+          args="$(find dense_fusion_ros)/sample/data/data-0048.bag --clock --loop">
+    </node>
+
+    <group ns="camera">
+        <group ns="rgb">
+            <node name="republish"
+                  pkg="image_transport" type="republish"
+                  args="compressed raw">
+                <remap from="in" to="image_raw" />
+                <remap from="out" to="image_raw" />
+            </node>
+        </group>
+        <group ns="depth_registered">
+            <node name="republish"
+                  pkg="image_transport" type="republish"
+                  args="compressedDepth raw">
+                <remap from="in" to="image_raw" />
+                <remap from="out" to="image_raw" />
+            </node>
+        </group>
+    </group>
+
+    <node name="republish"
+          pkg="image_transport" type="republish"
+          args="compressedDepth raw">
+        <remap from="in" to="label" />
+        <remap from="out" to="label" />
+    </node>
+
+    <include file="$(find openni2_launch)/launch/openni2.launch">
+        <arg name="camera" value="camera"/>
+        <arg name="publish_tf" value="false" />
+        <arg name="load_driver" value="false"/>
+        <arg name="depth_registration" value="true"/>
+    </include>
+
+    <node name="draw_rects"
+          pkg="jsk_perception" type="draw_rects">
+        <remap from="~input" to="/camera/rgb/image_rect_color" />
+        <remap from="~input/rects" to="/rects" />
+        <remap from="~input/class" to="/class_results" />
+        <rosparam>
+            use_classification_result: true
+            show_proba: false
+        </rosparam>
+    </node>
+
+</launch>
